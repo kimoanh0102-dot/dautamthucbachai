@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mastery: Dấu Tam Thức Bậc Hai - Toán 10 (KNTT)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script>
+        window.MathJax = {
+            tex: { 
+                inlineMath: [['$', '$'], ['\\(', '\\)']], 
+                displayMath: [['$$', '$$']],
+                processEscapes: true
+            },
+            options: { enableMenu: false },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f4f7fb; color: #1e2937; }
+        .math-render { opacity: 0; transition: opacity 0.5s ease; }
+        .math-render.ready { opacity: 1; }
+        .choice-btn:active { transform: scale(0.97); }
+        .explanation-box { 
+            border-left: 8px solid #0284c7; 
+            background-color: #f0f9ff;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.1);
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .btn-check { box-shadow: 0 10px 20px -5px rgba(2, 132, 199, 0.4); }
+        .item-row { transition: all 0.2s ease; }
+        .item-row:hover { background-color: #ffffff; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-2 md:p-6">
+    <div id="game-app" class="w-full max-w-5xl bg-white rounded-[2.5rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.2)] border border-gray-100 flex flex-col">
+        
+        <!-- Header -->
+        <div class="bg-sky-600 p-8 text-white text-center relative overflow-hidden rounded-t-[2.5rem]">
+            <div class="absolute inset-0 bg-gradient-to-br from-sky-800 via-sky-600 to-blue-500 opacity-95"></div>
+            <div class="relative z-10">
+                <h1 class="text-3xl font-extrabold tracking-tight text-white mb-2 italic uppercase">DẤU TAM THỨC BẬC HAI - CHƯƠNG 6</h1>
+                <p class="text-sky-100 text-sm font-medium opacity-90 uppercase tracking-[0.3em]">Hệ thống luyện đề 50 câu chuẩn hóa</p>
+            </div>
+        </div>
+
+        <!-- Progress bar -->
+        <div id="progress-container" class="hidden h-3 bg-gray-100 relative">
+            <div id="progress-bar" class="h-full bg-gradient-to-r from-sky-400 to-emerald-500 transition-all duration-700 w-0"></div>
+        </div>
+
+        <!-- Content Area -->
+        <div id="main-content" class="p-6 md:p-12 flex-grow min-h-[600px] flex flex-col overflow-y-auto">
+            <div id="start-screen" class="text-center py-16 my-auto">
+                <div class="text-[10rem] mb-8 leading-none">🎯</div>
+                <h2 class="text-4xl font-black text-gray-800 mb-6 uppercase tracking-tighter">SẴN SÀNG LUYỆN TẬP</h2>
+                <p class="text-gray-500 mb-12 max-w-2xl mx-auto leading-relaxed text-xl">
+                    Ngân hàng đủ 50 câu được rà soát tỉ mỉ. 15 câu hỏi sẽ được lấy ngẫu nhiên cho mỗi lượt. <br>
+                    Nhấn <b>"Kiểm tra"</b> để xem lời giải chi tiết. Hệ thống đảm bảo <b class="text-sky-600">tỷ lệ lặp lại câu hỏi so với đề ngay trước đó là 0%</b>.
+                </p>
+                <button onclick="initGame()" class="bg-sky-600 hover:bg-sky-700 text-white px-24 py-6 rounded-[2rem] font-black text-2xl shadow-2xl transition-all active:scale-95 transform hover:-translate-y-1">BẮT ĐẦU NGAY</button>
+            </div>
+        </div>
+
+        <!-- Footer Control -->
+        <div id="footer-actions" class="hidden p-8 bg-gray-50 border-t flex flex-col md:flex-row justify-between items-center gap-6 rounded-b-[2.5rem]">
+            <div id="status" class="text-lg font-black text-sky-600 uppercase tracking-[0.25em]">CÂU 1 / 15</div>
+            <div class="flex gap-4 w-full md:w-auto">
+                <button id="check-btn" onclick="processAnswer()" class="flex-1 md:flex-none bg-sky-600 hover:bg-sky-700 text-white px-16 py-4 rounded-2xl font-bold text-xl transition shadow-lg btn-check active:scale-95">Kiểm tra</button>
+                <button id="next-btn" onclick="renderNext()" class="hidden flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 text-white px-16 py-4 rounded-2xl font-bold text-xl shadow-lg transition active:scale-95">Tiếp theo →</button>
+                <button id="result-btn" onclick="finishGame()" class="hidden flex-1 md:flex-none bg-orange-500 hover:bg-orange-600 text-white px-16 py-4 rounded-2xl font-bold text-xl shadow-lg transition active:scale-95">Kết quả</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const MASTER_POOL = {
+            part1: [
+                { id: "p1_1", question: "Biểu thức nào sau đây là tam thức bậc hai?", options: ["$f(x)=3x^2+2x-5$", "$f(x)=2x-4$", "$f(x)=3x^3+2x-1$", "$f(x)=x^4-x^2+1$"], correct: 0, explanation: "Tam thức bậc hai đối với $x$ là biểu thức có dạng $f(x)=ax^2+bx+c$, trong đó $a,b,c$ là các hệ số thực và $a \\ne 0$. Chỉ có đáp án A thỏa mãn điều kiện này." },
+                { id: "p1_2", question: "Cho tam thức bậc hai $f(x)=-7x^2+13x-9$. Khẳng định nào sau đây đúng?", options: ["$f(x)=0, \\forall x \\in \\mathbb{R}$", "$f(x)<0, \\forall x \\in \\mathbb{R}$", "$f(x)>0, \\forall x \\in \\mathbb{R}$", "$f(x)\\ge 0, \\forall x \\in \\mathbb{R}$"], correct: 1, explanation: "Ta có $\\Delta = 13^2 - 4(-7)(-9) = 169 - 252 = -83 < 0$. Vì $\\Delta < 0$ và hệ số $a = -7 < 0$ nên $f(x)$ cùng dấu với $a$ (tức là $f(x) < 0$) với mọi $x \\in \\mathbb{R}$." },
+                { id: "p1_3", question: "Tam thức $f(x)=x^2-6x+8$ nhận giá trị âm trong tập nào dưới đây?", options: ["$(2;4)$", "$(-\\infty;2) \\cup (4;+\\infty)$", "$(-4;-2)$", "$(-\\infty;-4) \\cup (-2;+\\infty)$"], correct: 0, explanation: "Xét phương trình $x^2-6x+8=0 \\Leftrightarrow x=2$ hoặc $x=4$. Hệ số $a = 1 > 0$. Áp dụng quy tắc xét dấu 'trong trái, ngoài cùng', $f(x) < 0$ (trái dấu với $a$) khi $x \\in (2; 4)$." },
+                { id: "p1_4", question: "Tam thức nào dưới đây luôn dương với mọi giá trị của $x$?", options: ["$x^2-10x+2$", "$x^2-2x-10$", "$x^2-2x+10$", "$-x^2+2x+10$"], correct: 2, explanation: "Tam thức $f(x)=ax^2+bx+c > 0, \\forall x \\in \\mathbb{R} \\Leftrightarrow a > 0$ và $\\Delta < 0$. Kiểm tra $x^2-2x+10$ có $a=1>0$ và $\\Delta = (-2)^2 - 4(1)(10) = 4 - 40 = -36 < 0$ (Thỏa mãn)." },
+                { id: "p1_5", question: "Tập nghiệm của bất phương trình $-2x^2-3x+2>0$ là:", options: ["$(-\\infty;-2) \\cup (1/2;+\\infty)$", "$(-\\infty;-1/2) \\cup (2;+\\infty)$", "$(-1/2;2)$", "$(-2; 1/2)$"], correct: 3, explanation: "Xét phương trình $-2x^2-3x+2=0 \\Leftrightarrow x = -2$ hoặc $x = 1/2$. Hệ số $a = -2 < 0$. Bất phương trình mang dấu $>0$ (yêu cầu phần trái dấu với $a$) nên nghiệm nằm trong khoảng hai nghiệm: $x \\in (-2; 1/2)$." },
+                { id: "p1_6", question: "Tập nghiệm của bất phương trình $x^2+x+2>0$ là:", options: ["$\\emptyset$", "$\\mathbb{R}$", "$(1;2)$", "$(1;+\\infty)$"], correct: 1, explanation: "Tam thức $x^2+x+2$ có $\\Delta = 1^2 - 4(1)(2) = -7 < 0$ và $a=1>0$. Theo định lý dấu tam thức bậc hai, $x^2+x+2 > 0$ với mọi $x \\in \\mathbb{R}$." },
+                { id: "p1_7", question: "Tập nghiệm của bất phương trình $2x^2-14x+20<0$ là:", options: ["$(-\\infty;2] \\cup [5;+\\infty)$", "$(-\\infty;2) \\cup (5;+\\infty)$", "$(2;5)$", "$[2;5]$"], correct: 2, explanation: "Phương trình $2x^2-14x+20=0 \\Leftrightarrow x=2$ hoặc $x=5$. Bất phương trình có chiều $< 0$, hệ số $a=2>0$ (yêu cầu trái dấu). Vậy tập nghiệm là khoảng $x \\in (2; 5)$." },
+                { id: "p1_8", question: "Bất phương trình $-x^2+2x+3>0$ có tập nghiệm là:", options: ["$(-\\infty;-1) \\cup (3;+\\infty)$", "$(-1;3)$", "$[-1;3]$", "$(-3;1)$"], correct: 1, explanation: "Phương trình $-x^2+2x+3=0 \\Leftrightarrow x=-1$ hoặc $x=3$. Hệ số $a=-1<0$. Cần tìm phần $f(x)>0$ (trái dấu với $a$), suy ra $x \\in (-1; 3)$." },
+                { id: "p1_9", question: "Tập nghiệm của bất phương trình $-x^2+x+12 \\ge 0$ là:", options: ["$\\emptyset$", "$(-\\infty;-3] \\cup [4;+\\infty)$", "$(-\\infty;-4] \\cup [3;+\\infty)$", "$[-3;4]$"], correct: 3, explanation: "Phương trình $-x^2+x+12=0 \\Leftrightarrow x=-3$ hoặc $x=4$. Hệ số $a=-1<0$. Bất phương trình $\\ge 0$ (trái dấu $a$ hoặc bằng 0), suy ra tập nghiệm là đoạn $[-3; 4]$." },
+                { id: "p1_10", question: "Giải bất phương trình $x(x+5) \\le 2(x^2+2)$.", options: ["$x \\le 1$", "$1 \\le x \\le 4$", "$x \\in (-\\infty;1] \\cup [4;+\\infty)$", "$x \\ge 4$"], correct: 2, explanation: "Ta biến đổi: $x^2+5x \\le 2x^2+4 \\Leftrightarrow -x^2+5x-4 \\le 0 \\Leftrightarrow x^2-5x+4 \\ge 0$. Phương trình có nghiệm 1 và 4; $a=1>0$, lấy phần $\\ge 0$ (cùng dấu $a$) $\\Rightarrow x \\in (-\\infty;1] \\cup [4;+\\infty)$." },
+                { id: "p1_11", question: "Số nghiệm nguyên của bất phương trình $-x^2-9x+10 \\ge 0$ là:", options: ["10", "13", "11", "12"], correct: 3, explanation: "Ta có $-x^2-9x+10=0 \\Leftrightarrow x=1$ hoặc $x=-10$. Bất phương trình tương đương $-10 \\le x \\le 1$. Các nghiệm nguyên thuộc đoạn này là $-10, -9, ..., 0, 1$. Tổng cộng có $1 - (-10) + 1 = 12$ nghiệm nguyên." },
+                { id: "p1_12", question: "Tìm tập xác định của hàm số $y=\\sqrt{2x^2-5x+2}$.", options: ["$[2;+\\infty)$", "$(-\\infty;1/2]$", "$[1/2;2]$", "$(-\\infty;1/2] \\cup [2;+\\infty)$"], correct: 3, explanation: "Hàm số xác định khi biểu thức dưới dấu căn $\\ge 0$, tức là $2x^2-5x+2 \\ge 0$. Phương trình $2x^2-5x+2=0 \\Leftrightarrow x=1/2$ hoặc $x=2$. Vì $a=2>0$, lấy phần cùng dấu ta được $x \\le 1/2$ hoặc $x \\ge 2$." },
+                { id: "p1_13", question: "Tập xác định của hàm số $y=\\sqrt{-x^2+2x+3}$ là:", options: ["$(1;3)$", "$(-\\infty;-1) \\cup (3;+\\infty)$", "$[-1;3]$", "$(-\\infty;-1] \\cup [3;+\\infty)$"], correct: 2, explanation: "Điều kiện xác định: $-x^2+2x+3 \\ge 0$. Phương trình có hai nghiệm $x=-1, x=3$. Vì $a=-1<0$, lấy phần trái dấu (phần nằm giữa hai nghiệm), ta được $x \\in [-1; 3]$." },
+                { id: "p1_14", question: "Tập nghiệm của bất phương trình $x^2-25 < 0$ là:", options: ["$(-5;5)$", "$x > \\pm 5$", "$-5 < x < 5$", "$(-\\infty;-5) \\cup (5;+\\infty)$"], correct: 0, explanation: "$x^2-25<0 \\Leftrightarrow (x-5)(x+5)<0$. Tam thức có hai nghiệm $\\pm 5$, $a=1>0$, lấy phần trái dấu $\\Rightarrow -5 < x < 5$. Dưới dạng tập hợp là $(-5; 5)$." },
+                { id: "p1_15", question: "Tìm tham số $m$ để phương trình $x^2-(m+1)x+1=0$ vô nghiệm.", options: ["$-3 < m < 1$", "$m < -3 \\lor m > 1$", "$-1 < m < 3$", "$m \\le -3 \\lor m \\ge 1$"], correct: 0, explanation: "Phương trình bậc hai vô nghiệm $\\Leftrightarrow \\Delta < 0 \\Leftrightarrow (m+1)^2 - 4(1)(1) < 0 \\Leftrightarrow m^2+2m-3 < 0$. Giải BPT này được $-3 < m < 1$." },
+                { id: "p1_16", question: "Tam thức $f(x)=x^2+2.5x-1.5$ nhận giá trị không dương khi:", options: ["$x \\in [-3; 1/2]$", "$x \\in (-3; 1/2)$", "$x \\in (-\\infty;-3] \\cup [1/2;+\\infty)$", "$x \\in [-1/2; 3]$"], correct: 0, explanation: "Không dương nghĩa là $f(x) \\le 0$. Nghiệm của phương trình là $x=-3, x=1/2$. Do $a=1>0$, dấu $\\le 0$ (trái dấu a) nằm giữa hai nghiệm, nên $x \\in [-3; 1/2]$." },
+                { id: "p1_17", question: "Tập nghiệm của bất phương trình $-x^2-8x-16 < 0$ là:", options: ["$\\mathbb{R}$", "$\\mathbb{R} \\setminus \\{-4\\}$", "$\\emptyset$", "$( -\\infty ; -4)$"], correct: 1, explanation: "Bất phương trình tương đương $-(x^2+8x+16) < 0 \\Leftrightarrow -(x+4)^2 < 0$. Bất phương trình này đúng với mọi $x \\ne -4$. Vậy tập nghiệm là $\\mathbb{R} \\setminus \\{-4\\}$." },
+                { id: "p1_18", question: "Tìm $m$ để phương trình $-x^2+(m+2)x-4=0$ có hai nghiệm phân biệt.", options: ["$-6 < m < 2$", "$m < -6 \\lor m > 2$", "$-2 < m < 6$", "$\\mathbb{R}$"], correct: 1, explanation: "Phương trình có 2 nghiệm phân biệt $\\Leftrightarrow \\Delta > 0 \\Leftrightarrow (m+2)^2 - 4(-1)(-4) > 0 \\Leftrightarrow m^2+4m+4 - 16 > 0 \\Leftrightarrow m^2+4m-12 > 0 \\Leftrightarrow m < -6 \\lor m > 2$." },
+                { id: "p1_19", question: "Biểu thức $f(x) = mx^2 + 5x - 3 \\le 0, \\forall x \\in \\mathbb{R}$ khi và chỉ khi:", options: ["$m \\le -25/12$", "$m < -25/12$", "$m \\ge 25/12$", "$m > 0$"], correct: 0, explanation: "Cần thỏa mãn hệ điều kiện $\\begin{cases} a < 0 \\\\ \\Delta \\le 0 \\end{cases} \\Leftrightarrow \\begin{cases} m < 0 \\\\ 25 - 4m(-3) \\le 0 \\end{cases} \\Leftrightarrow \\begin{cases} m < 0 \\\\ 25 + 12m \\le 0 \\end{cases} \\Leftrightarrow m \\le -\\frac{25}{12}$." },
+                { id: "p1_20", question: "Tìm $m$ để hàm số $y=\\frac{x}{\\sqrt{x^2-mx+5}}$ có tập xác định là $\\mathbb{R}$.", options: ["$m \\in (-2\\sqrt{5}; 2\\sqrt{5})$", "$m \\in [-2\\sqrt{5}; 2\\sqrt{5}]$", "$m > 2\\sqrt{5}$", "$m < -2\\sqrt{5}$"], correct: 0, explanation: "Tập xác định $\\mathbb{R} \\Leftrightarrow x^2-mx+5 > 0, \\forall x \\in \\mathbb{R} \\Leftrightarrow \\begin{cases} a=1>0 \\text{ (luôn đúng)}\\\\ \\Delta = m^2-20 < 0 \\end{cases} \\Leftrightarrow -2\\sqrt{5} < m < 2\\sqrt{5}$." },
+                { id: "p1_21", question: "Dấu của tam thức $f(x) = x^2 - 3x + 2$ khi $x \\in (1;2)$ là:", options: ["Âm", "Dương", "Không âm", "Không dương"], correct: 0, explanation: "Tam thức có 2 nghiệm $x=1, x=2$. Hệ số $a=1>0$. Áp dụng quy tắc 'trong trái', với $x \\in (1;2)$ (khoảng giữa hai nghiệm) thì $f(x)$ mang dấu âm." },
+                { id: "p1_22", question: "Tập nghiệm của bất phương trình $x^2 - 4x + 4 > 0$ là:", options: ["$\\mathbb{R} \\setminus \\{2\\}$", "$\\mathbb{R}$", "$(2; +\\infty)$", "$( -\\infty; 2)$"], correct: 0, explanation: "Ta có $x^2-4x+4 > 0 \\Leftrightarrow (x-2)^2 > 0$. Một bình phương luôn lớn hơn 0 trừ khi cơ số bằng 0. Do đó điều này đúng với mọi $x \\ne 2$." },
+                { id: "p1_23", question: "Bất phương trình $-x^2 + 5x - 6 \\ge 0$ có tập nghiệm là:", options: ["$[2; 3]$", "$(2; 3)$", "$(-\\infty; 2] \\cup [3; +\\infty)$", "$\\emptyset$"], correct: 0, explanation: "Xét $-x^2+5x-6=0 \\Leftrightarrow x=2$ hoặc $x=3$. Hệ số $a=-1<0$. Bất phương trình $\\ge 0$ (trái dấu $a$ hoặc bằng 0) nên lấy đoạn $[2; 3]$." },
+                { id: "p1_24", question: "Tập nghiệm của bất phương trình $2x^2 - x + 5 > 0$ là:", options: ["$\\mathbb{R}$", "$\\emptyset$", "$(-1; 5)$", "$(1/2; 5)$"], correct: 0, explanation: "Tam thức có $\\Delta = (-1)^2 - 4(2)(5) = -39 < 0$ và $a=2>0$. Do đó theo định lý dấu tam thức, $2x^2-x+5 > 0, \\forall x \\in \\mathbb{R}$." },
+                { id: "p1_25", question: "Điều kiện để tam thức $f(x) = ax^2 + bx + c$ ($a \\ne 0$) luôn âm với mọi $x \\in \\mathbb{R}$ là:", options: ["$a < 0$ và $\\Delta < 0$", "$a > 0$ và $\\Delta < 0$", "$a < 0$ và $\\Delta \\le 0$", "$a > 0$ và $\\Delta \\ge 0$"], correct: 0, explanation: "Theo định lí về dấu tam thức bậc hai, để $f(x) < 0, \\forall x \\in \\mathbb{R}$ thì hệ số $a$ phải cùng dấu với $f(x)$ ($a < 0$) và đồ thị không cắt trục hoành ($\\Delta < 0$)." },
+                { id: "p1_26", question: "Tập xác định của hàm số $y = \\sqrt{x^2 - x - 2}$ là:", options: ["$(-\\infty; -1] \\cup [2; +\\infty)$", "$[-1; 2]$", "$(-1; 2)$", "$(-\\infty; -1) \\cup (2; +\\infty)$"], correct: 0, explanation: "Điều kiện xác định: $x^2 - x - 2 \\ge 0$. Phương trình có nghiệm $-1$ và $2$. Do $a=1>0$, lấy phần cùng dấu ngoài khoảng nghiệm, ta được $x \\le -1$ hoặc $x \\ge 2$." },
+                { id: "p1_27", question: "Tam thức $f(x) = -x^2 + 4x - 4$ nhận giá trị như thế nào trên tập số thực $\\mathbb{R}$?", options: ["Luôn không dương", "Luôn dương", "Luôn không âm", "Luôn âm"], correct: 0, explanation: "Ta có biến đổi $f(x) = -(x^2 - 4x + 4) = -(x-2)^2$. Vì $(x-2)^2 \\ge 0$ nên $-(x-2)^2 \\le 0, \\forall x \\in \\mathbb{R}$. Vậy hàm luôn không dương." },
+                { id: "p1_28", question: "Tìm tham số $m$ để tam thức $f(x) = x^2 - mx + 1 > 0$ với mọi $x \\in \\mathbb{R}$.", options: ["$-2 < m < 2$", "$m < -2 \\lor m > 2$", "$m = \\pm 2$", "$-2 \\le m \\le 2$"], correct: 0, explanation: "Yêu cầu bài toán $\\Leftrightarrow \\Delta < 0$ (do $a=1>0$ đã thỏa mãn). Tính $\\Delta = m^2 - 4 < 0 \\Leftrightarrow -2 < m < 2$." },
+                { id: "p1_29", question: "Số nghiệm nguyên của bất phương trình $x^2 - 3x - 4 \\le 0$ là bao nhiêu?", options: ["6", "5", "4", "7"], correct: 0, explanation: "Giải BPT $x^2-3x-4 \\le 0 \\Leftrightarrow -1 \\le x \\le 4$. Các nghiệm nguyên nằm trong đoạn này gồm: $-1, 0, 1, 2, 3, 4$. Tổng cộng có 6 số." },
+                { id: "p1_30", question: "Tam thức nào sau đây luôn âm với mọi $x \\in \\mathbb{R}$?", options: ["$-x^2 + x - 1$", "$-x^2 + 2x - 1$", "$x^2 - x + 1$", "$-x^2 + 4x - 3$"], correct: 0, explanation: "Xét đáp án A: Hệ số $a=-1 < 0, \\Delta = 1^2 - 4(-1)(-1) = 1 - 4 = -3 < 0 \\Rightarrow -x^2+x-1 < 0, \\forall x \\in \\mathbb{R}$. Các đáp án khác có $\\Delta \\ge 0$ hoặc $a > 0$." }
+            ],
+            part2: [
+                { id: "p2_1", question: "Một công ty du lịch cho nhóm khách: 50 người đầu giá 300.000đ/người. Nếu có thêm người đăng ký thì cứ thêm 1 người, giá vé giảm 5.000đ/người cho TOÀN BỘ hành khách. Gọi $x$ là số lượng khách từ người thứ 51 trở lên. Chi phí thực sự chuyến đi là 15.080.000 đồng.", items: [
+                    { text: "Giá vé cho mỗi hành khách khi có thêm $x$ người là $(300.000 - 5000)x$ đồng.", isTrue: false },
+                    { text: "Doanh thu theo $x$ là hàm số: $R(x) = (50 + x)(300.000 - 5000x)$.", isTrue: true },
+                    { text: "Để công ty không bị lỗ thì doanh thu phải lớn hơn hoặc bằng 15.080.000 đồng.", isTrue: true },
+                    { text: "Để công ty không bị lỗ thì tổng số người của nhóm du khách lớn nhất là 52 người.", isTrue: false }
+                ], explanation: "<b>Hướng dẫn giải chi tiết:</b><br><b>a) Sai.</b> Giá vé cho một người sau khi giảm là $300.000 - 5000x$ đồng/người, không phải nhân thêm $x$ bên ngoài.<br><b>b) Đúng.</b> Tổng số khách là $50+x$. Doanh thu bằng tổng số khách nhân với giá vé: $(50+x)(300.000 - 5000x)$.<br><b>c) Đúng.</b> Không lỗ tức là Doanh thu $\\ge$ Chi phí (15.080.000đ).<br><b>d) Sai.</b> Giải BPT: $(50+x)(300.000-5000x) \\ge 15.080.000 \\Leftrightarrow (50+x)(60-x) \\ge 3016 \\Leftrightarrow -x^2+10x-16 \\ge 0 \\Leftrightarrow 2 \\le x \\le 8$. Số người thêm lớn nhất là 8, vậy tổng số du khách nhiều nhất là $50+8 = 58$ người." },
+                { id: "p2_2", question: "Bộ phận nghiên cứu của công ty xác định tổng chi phí sản xuất $x$ sản phẩm là $C(x) = x^2 - 200x + 160.000$ (nghìn đồng). Giá mỗi sản phẩm bán ra là 800 nghìn đồng. Giả sử sản phẩm sản xuất ra đều bán hết.", items: [
+                    { text: "Doanh thu bán $x$ sản phẩm là $800x$ nghìn đồng.", isTrue: true },
+                    { text: "Lợi nhuận thu được khi bán sản phẩm là $-x^2 + 1000x - 160.000$ (nghìn đồng).", isTrue: true },
+                    { text: "Để đạt giá trị lớn nhất của lợi nhuận thì công ty cần sản xuất 500 sản phẩm.", isTrue: true },
+                    { text: "Công ty cần sản xuất ít nhất 200 sản phẩm để không bị lỗ.", isTrue: true }
+                ], explanation: "<b>Hướng dẫn giải chi tiết:</b><br><b>a) Đúng.</b> Bán $x$ sản phẩm với giá 800k/sản phẩm $\\Rightarrow$ Doanh thu = $800x$.<br><b>b) Đúng.</b> Lợi nhuận = Doanh thu - Chi phí = $800x - (x^2-200x+160.000) = -x^2+1000x-160.000$.<br><b>c) Đúng.</b> Hàm lợi nhuận là parabol hướng xuống ($a=-1$), đạt GTLN tại hoành độ đỉnh $x = -1000/(2\\cdot -1) = 500$ sản phẩm.<br><b>d) Đúng.</b> Không lỗ $\\Leftrightarrow -x^2+1000x-160.000 \\ge 0 \\Leftrightarrow x^2-1000x+160.000 \\le 0 \\Leftrightarrow 200 \\le x \\le 800$. Vậy số lượng ít nhất là 200 sản phẩm." },
+                { id: "p2_3", question: "Cho hàm số bậc hai $y = -2x^2 + 4x + 3$. Xét các khẳng định sau:", items: [
+                    { text: "Hàm số đã cho có tọa độ đỉnh là điểm $I(1; 4)$.", isTrue: false },
+                    { text: "Hàm số đã cho có hệ số của $x^2$ bằng $-2$.", isTrue: true },
+                    { text: "Hàm số đã cho có tập xác định là khoảng $(-\\infty; 5]$.", isTrue: false },
+                    { text: "Hàm số đồng biến trên khoảng $(-\\infty; 1)$ và nghịch biến trên $(1; +\\infty)$.", isTrue: true }
+                ], explanation: "<b>Hướng dẫn giải chi tiết:</b><br><b>a) Sai.</b> Hoành độ đỉnh $x_I = -4/(2\\cdot -2) = 1$. Tung độ đỉnh $y_I = -2(1)^2+4(1)+3 = 5$. Vậy đỉnh là $I(1; 5)$.<br><b>b) Đúng.</b> Rõ ràng hệ số $a = -2$.<br><b>c) Sai.</b> Tập xác định của mọi hàm số bậc hai là tập số thực $\\mathbb{R}$.<br><b>d) Đúng.</b> Vì $a = -2 < 0$, đồ thị quay bề lõm xuống dưới nên hàm số đồng biến bên trái đỉnh $(-\\infty; 1)$ và nghịch biến bên phải $(1; +\\infty)$." },
+                { id: "p2_4", question: "Cho hệ hai bất phương trình $x^2+2x-8 < 0$ (1) và $x^2-9 \\le 0$ (2).", items: [
+                    { text: "Tập nghiệm của bất phương trình (1) là khoảng $S_1 = (-4; 2)$.", isTrue: true },
+                    { text: "Tập nghiệm của bất phương trình (2) là đoạn $S_2 = [-3; 3]$.", isTrue: true },
+                    { text: "Giao các tập nghiệm của hai bất phương trình là $[-3; 2)$.", isTrue: true },
+                    { text: "Hợp các tập nghiệm của hai bất phương trình là đoạn $[-4; 3]$.", isTrue: false }
+                ], explanation: "<b>Hướng dẫn giải chi tiết:</b><br><b>a) Đúng.</b> Xét $x^2+2x-8=0 \\Rightarrow x=-4, x=2$. BPT mang dấu '$<$' $\\Rightarrow x \\in (-4; 2)$.<br><b>b) Đúng.</b> Xét $x^2-9=0 \\Rightarrow x=\\pm 3$. BPT mang dấu '$\\le$' $\\Rightarrow x \\in [-3; 3]$.<br><b>c) Đúng.</b> Giao của hai tập: $(-4; 2) \\cap [-3; 3] = [-3; 2)$.<br><b>d) Sai.</b> Hợp của hai tập: $(-4; 2) \\cup [-3; 3] = (-4; 3]$ (đây là nửa khoảng, không phải đoạn)." },
+                { id: "p2_5", question: "Một quả bóng được ném thẳng lên từ độ cao 1,6m so với mặt đất với vận tốc $10 m/s$. Độ cao bóng sau $t$ giây là $h(t) = -4,9t^2 + 10t + 1,6$ (m).", items: [
+                    { text: "Độ cao lớn nhất quả bóng đạt được là hơn 7 mét.", isTrue: false },
+                    { text: "Sau khoảng thời gian từ $t=0$ đến $t=2$, bóng luôn ở trên không.", isTrue: true },
+                    { text: "Bóng đạt độ cao 5 mét tại hai thời điểm khác nhau.", isTrue: true },
+                    { text: "Độ cao của bóng luôn tăng trong suốt 1 giây đầu tiên.", isTrue: true }
+                ], explanation: "<b>Hướng dẫn giải chi tiết:</b><br><b>a) Sai.</b> Xét $h(t)=7 \\Leftrightarrow -4,9t^2+10t-5,4=0$ có $\\Delta = 100 - 4(4,9)(5,4) = 100 - 105,84 < 0$ (Vô nghiệm). Quả bóng không thể tới độ cao 7m.<br><b>b) Đúng.</b> Tại $t=2, h(2) = -4,9(4)+20+1,6 = 2 > 0$.<br><b>c) Đúng.</b> Giải $h(t)=5 \\Leftrightarrow -4,9t^2+10t-3,4=0$. $\\Delta = 100 - 66,64 = 33,36 > 0$, phương trình có 2 nghiệm phân biệt.<br><b>d) Đúng.</b> Hoành độ đỉnh $t_I = -10/(2\\cdot -4,9) \\approx 1,02$. Hàm số đồng biến (tăng độ cao) trên $(0; 1.02]$. Do khoảng $[0; 1]$ nằm hoàn toàn trong đoạn này, nên bóng liên tục đi lên trong suốt 1 giây đầu tiên." },
+                { id: "p2_6", question: "Cho tam thức bậc hai $f(x) = ax^2 + bx + c$ ($a \\ne 0$).", items: [
+                    { text: "Nếu $\\Delta < 0$ thì $f(x)$ luôn cùng dấu với hệ số $a$ với mọi $x \\in \\mathbb{R}$.", isTrue: true },
+                    { text: "Nếu $\\Delta = 0$ thì $f(x)$ luôn cùng dấu với hệ số $a$ với mọi $x \\in \\mathbb{R}$.", isTrue: false },
+                    { text: "Bất phương trình $ax^2+bx+c \\le 0$ vô nghiệm khi và chỉ khi $a > 0$ và $\\Delta < 0$.", isTrue: true },
+                    { text: "Nếu đồ thị hàm số cắt trục hoành tại hai điểm phân biệt thì bắt buộc $\\Delta > 0$.", isTrue: true }
+                ], explanation: "<b>Hướng dẫn giải chi tiết:</b><br><b>a) Đúng.</b> Đây là nội dung định lý về dấu tam thức bậc hai.<br><b>b) Sai.</b> Khi $\\Delta=0$, $f(x)$ cùng dấu với $a$ với mọi $x \\ne -b/2a$. Tại đúng vị trí $x=-b/2a$, $f(x)=0$ (không mang dấu).<br><b>c) Đúng.</b> BPT $\\le 0$ vô nghiệm tức là $f(x) > 0, \\forall x \\in \\mathbb{R}$, điều kiện tương đương là $a>0$ và $\\Delta<0$.<br><b>d) Đúng.</b> Điều kiện để có hai giao điểm với trục hoành là phương trình $f(x)=0$ có hai nghiệm phân biệt $\\Leftrightarrow \\Delta > 0$." },
+                { id: "p2_7", question: "Xét dấu tam thức bậc hai $f(x) = x^2 - 5x + 6$.", items: [
+                    { text: "Tam thức có hai nghiệm phân biệt là $x=2$ và $x=3$.", isTrue: true },
+                    { text: "$f(x) < 0$ khi và chỉ khi $x \\in (2; 3)$.", isTrue: true },
+                    { text: "$f(x) \\ge 0$ khi $x \\in [2; 3]$.", isTrue: false },
+                    { text: "Hệ số $a$ của tam thức mang dấu dương.", isTrue: true }
+                ], explanation: "<b>Hướng dẫn giải chi tiết:</b><br><b>a) Đúng.</b> Giải phương trình $x^2 - 5x + 6 = 0$ ta dễ dàng tìm được hai nghiệm $x=2, x=3$.<br><b>b) Đúng.</b> Áp dụng quy tắc xét dấu 'trong trái ngoài cùng', vì $a=1>0$ nên $f(x)$ nhận giá trị âm (trái dấu a) trên khoảng $(2; 3)$.<br><b>c) Sai.</b> $f(x) \\ge 0$ (cùng dấu a) khi $x$ nằm ngoài khoảng nghiệm: $x \\in (-\\infty; 2] \\cup [3; +\\infty)$.<br><b>d) Đúng.</b> Hệ số $a = 1 > 0$." },
+                { id: "p2_8", question: "Một khung dây thép hình chữ nhật dài 20cm và rộng 15cm được uốn lại thành khung hình chữ nhật mới kích thước $(20+x)$ và $(15-x)$ cm.", items: [
+                    { text: "Diện tích khung hình chữ nhật ban đầu là $300 cm^2$.", isTrue: true },
+                    { text: "Diện tích khung hình chữ nhật mới là hàm số $S(x) = -x^2 + 5x + 300$.", isTrue: false },
+                    { text: "Để diện tích khung mới tăng lên so với ban đầu thì $x \\in (-5; 0)$.", isTrue: true },
+                    { text: "Nếu thay đổi $x=0$ hoặc $x=-5$ thì diện tích không thay đổi.", isTrue: true }
+                ], explanation: "<b>Hướng dẫn giải chi tiết:</b><br><b>a) Đúng.</b> Diện tích cũ: $S_0 = 20 \\cdot 15 = 300$.<br><b>b) Sai.</b> Diện tích mới: $S(x) = (20+x)(15-x) = 300 - 20x + 15x - x^2 = -x^2 - 5x + 300$.<br><b>c) Đúng.</b> Điều kiện kích thước: $20+x > 0$ và $15-x > 0 \\Rightarrow -20 < x < 15$. Để diện tích tăng: $S(x) > 300 \\Leftrightarrow -x^2 - 5x > 0 \\Leftrightarrow x(x+5) < 0 \\Leftrightarrow -5 < x < 0$. Kết hợp điều kiện, ta lấy $x \\in (-5; 0)$.<br><b>d) Đúng.</b> Thay $x=0$ hoặc $x=-5$ vào $S(x)$ đều cho kết quả $300$ (bằng với diện tích ban đầu)." },
+                { id: "p2_9", question: "Kim muốn trồng một vườn hoa hình chữ nhật. Kim có 30m hàng rào và muốn diện tích vườn hoa ít nhất là $50 m^2$. Gọi $x$ là chiều rộng của vườn.", items: [
+                    { text: "Nửa chu vi của vườn hoa là 15 mét.", isTrue: true },
+                    { text: "Chiều dài của vườn hoa biểu diễn theo $x$ là $15 - x$.", isTrue: true },
+                    { text: "Bất phương trình diễn tả yêu cầu bài toán là $-x^2 + 15x - 50 \\ge 0$.", isTrue: true },
+                    { text: "Chiều rộng $x$ chỉ có thể nằm trong khoảng $(5; 10)$.", isTrue: false }
+                ], explanation: "<b>Hướng dẫn giải chi tiết:</b><br><b>a) Đúng.</b> Nửa chu vi bằng $30/2 = 15$m.<br><b>b) Đúng.</b> Chiều dài = Nửa chu vi - Chiều rộng = $15 - x$.<br><b>c) Đúng.</b> Diện tích $S = x(15-x) = -x^2+15x$. Yêu cầu $S \\ge 50 \\Leftrightarrow -x^2 + 15x - 50 \\ge 0$.<br><b>d) Sai.</b> Giải BPT: $-x^2+15x-50 \\ge 0 \\Leftrightarrow x^2-15x+50 \\le 0 \\Leftrightarrow x \\in [5; 10]$. Là một đoạn (có lấy dấu bằng tại 5 và 10), không phải khoảng $(5; 10)$." },
+                { id: "p2_10", question: "Về tam thức bậc hai $f(x) = -2x^2 + 3x + 5$.", items: [
+                    { text: "Tổng hai nghiệm của $f(x)$ là $1.5$.", isTrue: true },
+                    { text: "Tam thức nhận giá trị dương khi $x \\in (-1; 2.5)$.", isTrue: true },
+                    { text: "Đồ thị hàm số bậc hai này đi qua điểm $(0; 5)$.", isTrue: true },
+                    { text: "Hệ số $a$ và $c$ của tam thức mang cùng dấu.", isTrue: false }
+                ], explanation: "<b>Hướng dẫn giải chi tiết:</b><br><b>a) Đúng.</b> Theo Vi-ét, tổng hai nghiệm $x_1+x_2 = -b/a = -3/(-2) = 1.5$.<br><b>b) Đúng.</b> Phương trình có hai nghiệm là $-1$ và $2.5$. Do $a = -2 < 0$, áp dụng 'trong trái ngoài cùng' $\\Rightarrow f(x)>0$ khi $x$ nằm giữa hai nghiệm: $x \\in (-1; 2.5)$.<br><b>c) Đúng.</b> Thay $x=0$ vào hàm số $\\Rightarrow y=5$.<br><b>d) Sai.</b> Hệ số $a=-2$ (âm), trong khi $c=5$ (dương), chúng mang dấu trái ngược nhau." }
+            ],
+            part3: [
+                { id: "p3_1", question: "Gọi $S$ là tập hợp các nghiệm nguyên dương của bất phương trình $x(x+1) \\le 16+x$. Tính tổng các phần tử của tập hợp $S$.", keywords: ["10"], explanation: "Biến đổi BPT: $x^2+x \\le 16+x \\Leftrightarrow x^2 \\le 16 \\Leftrightarrow -4 \\le x \\le 4$. Nghiệm nguyên dương thuộc tập $S = \\{1, 2, 3, 4\\}$. Tổng = $1+2+3+4 = 10$." },
+                { id: "p3_2", question: "Cho tam thức bậc hai $f(x) = x^2 + 2mx + 5m - 4$. Có bao nhiêu giá trị nguyên của $m$ để $f(x) \\ge 0$ với mọi $x \\in \\mathbb{R}$?", keywords: ["4"], explanation: "$f(x) \\ge 0 \\forall x \\Leftrightarrow \\Delta' \\le 0$ (vì $a=1>0$). $\\Delta' = m^2 - (5m-4) = m^2-5m+4 \\le 0 \\Leftrightarrow 1 \\le m \\le 4$. Vì $m \\in \\mathbb{Z}$, $m \\in \\{1,2,3,4\\}$. Có 4 giá trị." },
+                { id: "p3_3", question: "Có bao nhiêu giá trị nguyên dương của tham số $m$ sao cho: $-x^2 + 2(m+1)x - m^2 + m < 0$ với mọi $x \\in \\mathbb{R}$?", keywords: ["0"], explanation: "Yêu cầu: $\\Delta' < 0$ (vì $a=-1<0$). $\\Delta' = (m+1)^2 - (-1)(-m^2+m) = m^2+2m+1 - m^2+m = 3m+1 < 0 \\Leftrightarrow m < -1/3$. Không có số nguyên dương nào thỏa mãn $\\Rightarrow$ 0." },
+                { id: "p3_4", question: "Có bao nhiêu giá trị nguyên dương của tham số $m \\in [0; 10]$ để phương trình $x^2 - (m+1)x + 3m - 5 = 0$ có hai nghiệm phân biệt?", keywords: ["5"], explanation: "Phương trình có 2 nghiệm pb $\\Leftrightarrow \\Delta = (m+1)^2 - 4(3m-5) = m^2-10m+21 > 0 \\Leftrightarrow m < 3 \\lor m > 7$. Xét $m \\in [0;10]$ nguyên dương: $\\{1, 2, 8, 9, 10\\}$. Tổng cộng có 5 giá trị." },
+                { id: "p3_5", question: "Một cửa hàng bán quần áo có lợi nhuận theo $x$ sản phẩm được tính bằng: $P(x) = x^2 + 24x + 50$ (nghìn đồng). Cửa hàng muốn đạt lợi nhuận ít nhất 50.000 nghìn đồng (50 triệu). Hãy tìm số lượng sản phẩm TỐI THIỂU cần bán. (Làm tròn lên số nguyên).", keywords: ["212"], explanation: "Yêu cầu $P(x) \\ge 50000 \\Leftrightarrow x^2+24x-49950 \\ge 0$. Giải PT $x^2+24x-49950=0$ có nghiệm dương $x \\approx 211.81$. Do $x$ là số lượng sản phẩm (nguyên dương) và BPT mang dấu $\\ge$ nên $x \\ge 212$." },
+                { id: "p3_6", question: "Một quả bóng được ném thẳng lên từ độ cao 1,5m với vận tốc 10m/s. Độ cao $h(t) = -3.5t^2 + 7t + 1.5$. Hỏi khoảng thời gian (giây) quả bóng ở độ cao từ 4m trở lên là bao nhiêu? (Lấy số thập phân 1 chữ số)", keywords: ["1.1", "1,1"], explanation: "Yêu cầu $h(t) \\ge 4 \\Leftrightarrow -3.5t^2+7t-2.5 \\ge 0 \\Leftrightarrow 7t^2-14t+5 \\le 0$. Giải pt có nghiệm $\\frac{7 \\pm \\sqrt{14}}{7}$. Khoảng thời gian $\\Delta t = \\frac{7+\\sqrt{14}}{7} - \\frac{7-\\sqrt{14}}{7} = \\frac{2\\sqrt{14}}{7} \\approx 1.1$ giây." },
+                { id: "p3_7", question: "Diện tích khung dây thép sau khi uốn là $S(x) = (30-x)(20+x)$. Để diện tích tăng lên so với diện tích ban đầu ($600 cm^2$), $x$ phải thuộc khoảng $(a; b)$. Có bao nhiêu giá trị nguyên của $x$ trong khoảng này?", keywords: ["9"], explanation: "Điều kiện kích thước: $30-x > 0$ và $20+x > 0 \\Rightarrow -20 < x < 30$. Yêu cầu diện tích tăng: $S(x) > 600 \\Leftrightarrow -x^2+10x+600 > 600 \\Leftrightarrow -x^2+10x > 0 \\Leftrightarrow 0 < x < 10$. Kết hợp điều kiện ta được $x \\in (0; 10)$. Khoảng này chứa 9 số nguyên (từ 1 đến 9)." },
+                { id: "p3_8", question: "Tính tổng các nghiệm nguyên của bất phương trình $-x^2+x+12 \\ge 0$.", keywords: ["4"], explanation: "Giải BPT: $x^2-x-12 \\le 0 \\Leftrightarrow -3 \\le x \\le 4$. Các nghiệm nguyên là $\\{-3, -2, -1, 0, 1, 2, 3, 4\\}$. Tổng bằng $4$ (các số đối nhau bị triệt tiêu)." },
+                { id: "p3_9", question: "Giá trị $m$ nguyên lớn nhất để tam thức $-2x^2 + 3x + m - 1 < 0$ với mọi $x \\in \\mathbb{R}$ là:", keywords: ["-1"], explanation: "Yêu cầu $\\Delta = 9 - 4(-2)(m-1) < 0 \\Leftrightarrow 9 + 8m - 8 < 0 \\Leftrightarrow 8m < -1 \\Leftrightarrow m < -1/8$. Số nguyên lớn nhất thỏa mãn là $-1$." },
+                { id: "p3_10", question: "Có bao nhiêu số nguyên $m \\in [-10; 10]$ để phương trình $-x^2 + x + 4m^2 - 5m + 1 = 0$ có hai nghiệm TRÁI DẤU?", keywords: ["20"], explanation: "Điều kiện hai nghiệm trái dấu: $P = c/a < 0 \\Leftrightarrow \\frac{4m^2-5m+1}{-1} < 0 \\Leftrightarrow 4m^2-5m+1 > 0 \\Leftrightarrow m < 1/4$ hoặc $m > 1$. Với $m \\in [-10; 10]$: $m \\in \\{-10, ..., 0\\} \\cup \\{2, ..., 10\\}$. Số lượng: $11 + 9 = 20$." }
+            ]
+        };
+
+        let currentSession = [];
+        let currentIndex = 0;
+        let score = 0;
+        let selectedAnswers = null;
+
+        function shuffle(array) { return array.sort(() => Math.random() - 0.5); }
+
+        function initGame() {
+            // Lấy danh sách ID của LƯỢT ĐỀ LIỀN TRƯỚC
+            const lastRoundIds = JSON.parse(localStorage.getItem('last_round_ids_dau_tam_thuc_final') || '[]');
+            
+            const getFresh = (pool, count) => {
+                // Lọc những câu CHƯA xuất hiện ở lượt liền trước
+                let available = pool.filter(q => !lastRoundIds.includes(q.id));
+                
+                let selected = [];
+                if (available.length >= count) {
+                    selected = shuffle(available).slice(0, count);
+                } else {
+                    selected = [...available];
+                    let needed = count - available.length;
+                    let recycled = pool.filter(q => lastRoundIds.includes(q.id));
+                    selected = selected.concat(shuffle(recycled).slice(0, needed));
+                }
+                return selected;
+            };
+
+            const p1 = getFresh(MASTER_POOL.part1, 7);
+            const p2 = getFresh(MASTER_POOL.part2, 5);
+            const p3 = getFresh(MASTER_POOL.part3, 3);
+
+            currentSession = [...p1, ...p2, ...p3];
+            
+            // LƯU LẠI ID của lượt này để dùng đối chiếu cho lượt tiếp theo (Bảo đảm lặp 0% nếu kho đủ)
+            localStorage.setItem('last_round_ids_dau_tam_thuc_final', JSON.stringify(currentSession.map(q => q.id)));
+
+            currentIndex = 0; 
+            score = 0;
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('progress-container').classList.remove('hidden');
+            document.getElementById('footer-actions').classList.remove('hidden');
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const container = document.getElementById('main-content');
+            const data = currentSession[currentIndex];
+            const qNum = currentIndex + 1;
+            selectedAnswers = (currentIndex < 7) ? null : (currentIndex < 12 ? {} : "");
+
+            document.getElementById('status').innerText = `CÂU ${qNum} / 15`;
+            document.getElementById('progress-bar').style.width = `${(qNum / 15) * 100}%`;
+            document.getElementById('check-btn').classList.remove('hidden');
+            document.getElementById('next-btn').classList.add('hidden');
+            document.getElementById('result-btn').classList.add('hidden');
+
+            let html = `<div class="fade-in">
+                <div class="mb-10 flex items-center gap-4">
+                    <span class="bg-sky-600 text-white text-xs font-black px-5 py-2.5 rounded-2xl uppercase tracking-widest shadow-lg shadow-sky-100">PHẦN ${qNum <= 7 ? 'I: TRẮC NGHIỆM' : (qNum <= 12 ? 'II: ĐÚNG/SAI' : 'III: TRẢ LỜI NGẮN')}</span>
+                </div>
+                <div class="text-xl md:text-2xl font-bold text-gray-800 mb-12 leading-relaxed math-render" id="q-text">${data.question}</div>`;
+
+            if (currentIndex < 7) { 
+                html += `<div class="grid gap-6">`;
+                data.options.forEach((opt, i) => {
+                    html += `<button onclick="pickMCQ(${i})" id="mcq-${i}" class="choice-btn group p-7 border-2 border-gray-100 rounded-[2rem] text-left hover:border-sky-400 hover:bg-sky-50 transition-all flex items-center gap-8">
+                        <div class="w-14 h-14 rounded-3xl bg-gray-50 flex items-center justify-center font-black text-gray-400 group-hover:text-sky-600 transition-colors text-2xl">${String.fromCharCode(65+i)}</div>
+                        <div class="text-xl font-semibold text-gray-700 math-render">${opt}</div>
+                    </button>`;
+                });
+                html += `</div>`;
+            } else if (currentIndex < 12) { 
+                html += `<div class="space-y-6">`;
+                data.items.forEach((item, i) => {
+                    html += `<div class="item-row flex flex-col md:flex-row md:items-center justify-between p-7 bg-gray-50 rounded-[2.5rem] border border-gray-100 gap-6 shadow-sm">
+                        <div class="flex items-start gap-4">
+                            <span class="font-black text-sky-500 mt-1 text-lg">${['a)', 'b)', 'c)', 'd)'][i]}</span>
+                            <span class="text-xl text-gray-700 font-bold leading-relaxed math-render">${item.text}</span>
+                        </div>
+                        <div class="flex gap-4 min-w-[260px]">
+                            <button onclick="pickTF(${i}, true)" id="tf-${i}-t" class="flex-1 py-5 rounded-[1.5rem] border-2 border-white bg-white font-black text-lg transition active:scale-90 shadow-sm text-gray-400 hover:text-sky-600">ĐÚNG</button>
+                            <button onclick="pickTF(${i}, false)" id="tf-${i}-f" class="flex-1 py-5 rounded-[1.5rem] border-2 border-white bg-white font-black text-lg transition active:scale-90 shadow-sm text-gray-400 hover:text-sky-600">SAI</button>
+                        </div>
+                    </div>`;
+                });
+                html += `</div>`;
+            } else { 
+                html += `<div class="relative max-w-lg mx-auto mt-12">
+                    <input type="text" id="short-ans" class="w-full p-10 border-4 border-gray-100 rounded-[3rem] text-5xl font-black text-center text-sky-600 focus:border-sky-500 outline-none transition shadow-inner" placeholder="Nhập đáp án...">
+                </div>`;
+            }
+
+            html += `<div id="exp-box" class="hidden mt-12 p-10 rounded-[3rem] explanation-box"></div></div>`;
+            container.innerHTML = html;
+            
+            if (window.MathJax) {
+                MathJax.typesetPromise().then(() => {
+                    document.querySelectorAll('.math-render').forEach(el => el.classList.add('ready'));
+                });
+            }
+        }
+
+        function pickMCQ(idx) {
+            selectedAnswers = idx;
+            document.querySelectorAll('[id^="mcq-"]').forEach(b => {
+                b.classList.replace('border-sky-500', 'border-gray-100');
+                b.classList.remove('bg-sky-50');
+            });
+            document.getElementById(`mcq-${idx}`).classList.replace('border-gray-100', 'border-sky-500');
+            document.getElementById(`mcq-${idx}`).classList.add('bg-sky-50');
+        }
+
+        function pickTF(idx, val) {
+            if (typeof selectedAnswers !== 'object') selectedAnswers = {};
+            selectedAnswers[idx] = val;
+            const btnT = document.getElementById(`tf-${idx}-t`), btnF = document.getElementById(`tf-${idx}-f`);
+            btnT.className = `flex-1 py-5 rounded-[1.5rem] border-2 font-black text-lg transition active:scale-90 ${val === true ? 'bg-sky-600 text-white border-sky-600 shadow-md' : 'bg-white border-white text-gray-400'}`;
+            btnF.className = `flex-1 py-5 rounded-[1.5rem] border-2 font-black text-lg transition active:scale-90 ${val === false ? 'bg-sky-600 text-white border-sky-600 shadow-md' : 'bg-white border-white text-gray-400'}`;
+        }
+
+        function processAnswer() {
+            const data = currentSession[currentIndex];
+            let isCorrect = false;
+
+            if (currentIndex < 7) {
+                if (selectedAnswers === null) return alert("Vui lòng chọn đáp án!");
+                isCorrect = (selectedAnswers === data.correct);
+                if (isCorrect) score += 1;
+                document.getElementById(`mcq-${data.correct}`).classList.add('bg-green-50', 'border-green-500');
+                if(!isCorrect) document.getElementById(`mcq-${selectedAnswers}`).classList.add('bg-red-50', 'border-red-500');
+            } else if (currentIndex < 12) {
+                let correctCount = 0;
+                let isFullAnswered = true;
+                for(let i=0; i<4; i++) { if(selectedAnswers[i] === undefined) isFullAnswered = false; }
+                if(!isFullAnswered) return alert("Vui lòng chọn Đúng/Sai cho tất cả các ý!");
+
+                data.items.forEach((item, i) => { if (selectedAnswers[i] === item.isTrue) correctCount++; });
+                const points = [0, 0.1, 0.25, 0.5, 1];
+                score += points[correctCount];
+                isCorrect = (correctCount === 4);
+            } else {
+                const input = document.getElementById('short-ans').value.trim().toLowerCase().replace(',', '.');
+                if(!input) return alert("Vui lòng nhập đáp án!");
+                isCorrect = data.keywords.some(k => input.includes(k.toLowerCase()));
+                if (isCorrect) score += 1;
+            }
+
+            const exp = document.getElementById('exp-box');
+            exp.innerHTML = `<h4 class="text-sky-800 font-extrabold text-2xl mb-6 uppercase tracking-tighter">${isCorrect ? '✨ HOÀN TOÀN CHÍNH XÁC!' : '❌ HÃY KIỂM TRA LẠI LỜI GIẢI'}</h4>
+                             <div class="text-sky-900 font-medium leading-loose math-render text-lg" id="exp-text">${data.explanation}</div>`;
+            exp.classList.remove('hidden');
+            document.getElementById('check-btn').classList.add('hidden');
+
+            if (currentIndex === 14) document.getElementById('result-btn').classList.remove('hidden');
+            else document.getElementById('next-btn').classList.remove('hidden');
+            
+            if (window.MathJax) {
+                MathJax.typesetPromise().then(() => {
+                    const el = document.getElementById('exp-text');
+                    if(el) el.classList.add('ready');
+                });
+            }
+        }
+
+        function renderNext() { currentIndex++; renderQuestion(); }
+
+        function finishGame() {
+            const container = document.getElementById('main-content');
+            document.getElementById('footer-actions').classList.add('hidden');
+            document.getElementById('progress-container').classList.add('hidden');
+            
+            // Hệ thống chấm thang điểm 10 (raw score max là 15)
+            const finalScore = ((score / 15) * 10).toFixed(2);
+            let rank = finalScore >= 8.5 ? "XUẤT SẮC" : (finalScore >= 6.5 ? "KHÁ GIỎI" : "CẦN CỐ GẮNG");
+            
+            container.innerHTML = `<div class="text-center py-20 fade-in">
+                <div class="text-[12rem] mb-12 animate-pulse drop-shadow-2xl">🏆</div>
+                <h2 class="text-6xl font-black text-gray-800 mb-6 uppercase tracking-tighter">${rank}</h2>
+                <div class="text-[10rem] leading-none font-black text-sky-600 my-16 tracking-tighter italic">${finalScore}<span class="text-4xl text-gray-300 ml-6 not-italic">/ 10</span></div>
+                <button onclick="location.reload()" class="bg-sky-600 text-white px-24 py-8 rounded-[3rem] font-black text-3xl shadow-2xl hover:bg-sky-700 transition active:scale-95 uppercase tracking-wide">CHƠI LẠI</button>
+            </div>`;
+        }
+    </script>
+</body>
+</html>
